@@ -1,221 +1,268 @@
-# DS620-TeamProject
-AI-Powered Skin Lesion Triage Assistant 
+# 🩺 AI-Powered Skin Lesion Triage Assistant  
+### Deep Learning–Based High-Risk vs Low-Risk Classification with Grad-CAM
 
-🩺 AI-Powered Skin Lesion Triage Assistant
-Deep Learning–Based High-Risk vs Low-Risk Classification with Grad-CAM
+This project develops an AI-assisted triage tool for classifying skin lesions into **high-risk** or **low-risk** categories using dermoscopic images.  
+It leverages **ResNet-18** and **Grad-CAM** to improve clinical decision support and interpretability.
 
-This project implements an AI-assisted triage system for skin lesions using dermoscopic images.
-The model classifies lesions into high-risk or low-risk categories to support early detection of potentially dangerous skin cancers such as melanoma.
+> ⚠️ **Disclaimer:**  
+> This system is a **prototype for academic purposes only**.  
+> It is **not** a medical device and must **not** be used for clinical diagnosis.
 
-⚠️ Disclaimer:
-This model is a prototype for academic purposes only.
-It is not a medical device and must not be used for clinical diagnosis.
+---
 
-📌 Table of Contents
+## 📌 Table of Contents
+- [Overview](#-overview)
+- [Dataset](#-dataset)
+- [Project Pipeline](#-project-pipeline)
+- [Model Architecture](#-model-architecture)
+- [Training Details](#-training-details)
+- [Evaluation Results](#-evaluation-results)
+- [Grad-CAM Interpretability](#-grad-cam-interpretability)
+- [Project Structure](#-project-structure)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Limitations](#-limitations)
+- [Future Work](#-future-work)
+- [Team T08](#-team-t08)
 
-Overview
+---
 
-Dataset
+## 🧠 Overview
 
-Project Pipeline
+Skin cancer is one of the most common cancers worldwide.  
+Early detection of conditions such as **melanoma** is critical for improving patient outcomes, yet clinicians often struggle with triage decisions.
 
-Model Architecture
+This project provides:
 
-Training Details
+✔️ A **ResNet-18 classifier**  
+✔️ A **binary high-risk vs low-risk triage system**  
+✔️ **Grad-CAM heatmaps** for interpretability  
 
-Evaluation Results
+Its purpose is to **assist clinicians**, not replace them, by identifying lesions that may require urgent dermatology review.
 
-Grad-CAM Interpretability
+---
 
-Project Structure
+## 📂 Dataset
 
-Installation
+### **HAM10000 — Human Against Machine (10,015 images)**  
+A dermoscopic image dataset containing seven diagnostic classes, mapped into two categories:
 
-Usage
+#### **High-risk (1)**  
+- `mel` — Melanoma  
+- `bcc` — Basal Cell Carcinoma  
+- `akiec` — Actinic Keratoses / Intraepithelial Carcinoma  
 
-Limitations
+#### **Low-risk (0)**  
+- `nv`, `bkl`, `df`, `vasc`
 
-Future Work
+Metadata includes age, sex, and anatomical site.  
+Dataset available publicly on **Kaggle**.
 
+---
 
-🧠 Overview
+## 🔄 Project Pipeline
 
-Skin cancer is one of the most common cancers worldwide, and melanoma can be life-threatening if detected late.
-Primary care providers often face difficulty determining which lesions require urgent dermatology referral.
+**Data Loading → Cleaning → EDA → Preprocessing → Model Training → Evaluation → Grad-CAM Visualization**
 
-This project builds:
+Key preprocessing steps include:
 
-✔️ A ResNet-18 deep learning classifier
-✔️ A binary high-risk vs low-risk triage system
-✔️ Grad-CAM heatmaps to visualize model decision regions
+- Removing missing/duplicate images  
+- Standardizing image size (160×160)  
+- Creating binary triage labels  
+- Handling class imbalance via `pos_weight`  
 
-The objective is to assist, not replace, clinicians by highlighting high-risk lesions that need priority review.
+---
 
+## 🏗️ Model Architecture
 
-📂 Dataset
-HAM10000 (Human Against Machine, 10,015 images)
+### **ResNet-18 Backbone**
+- Pretrained on ImageNet  
+- Final layer replaced with a **1-output unit**  
+- Binary classification using sigmoid  
+- Fully compatible with Grad-CAM  
 
-Dermoscopic images of pigmented skin lesions
+**Why ResNet-18?**
 
-7 diagnostic classes, mapped to 2 triage categories:
+- Lightweight  
+- Fast training  
+- Good performance on medical imaging  
 
-High-risk (1):
+---
 
-mel — Melanoma
+## ⚙️ Training Details
 
-bcc — Basal Cell Carcinoma
+| Component | Setting |
+|----------|---------|
+| Train/Val/Test Split | 70% / 15% / 15% |
+| Optimizer | Adam |
+| Learning Rate | 1e-4 |
+| Epochs | 6 |
+| Batch Size | 16 |
+| Loss Function | BCEWithLogitsLoss (`pos_weight`) |
+| Augmentation | Flips, rotations |
 
-akiec — Actinic Keratoses / Carcinoma
+---
 
-Low-risk (0):
+## 📊 Evaluation Results
 
-nv, bkl, df, vasc
+**Final Test Metrics**
 
-Metadata includes: age, sex, body site.
+- **Accuracy:** 0.75  
+- **Precision (High-risk):** 0.69  
+- **Recall (High-risk):** 0.88  
+- **F1-score:** 0.78  
+- **ROC-AUC:** 0.860  
 
-The dataset is publicly available on Kaggle.
+**Interpretation:**  
+High recall means the model is effective at identifying high-risk lesions, which is critical for triage.
 
-🔄 Project Pipeline
-Data Loading → Cleaning → EDA → Preprocessing → Model Training → Evaluation → Interpretability (Grad-CAM)
+---
 
-Data Cleaning Includes:
+## 🔥 Grad-CAM Interpretability
 
-Removing missing or duplicate images
+Grad-CAM heatmaps reveal which image regions influenced the model's decision.  
+This allows clinicians to verify that predictions are based on meaningful dermatological features, such as:
 
-Standardizing image resolution (160×160)
-
-Creating binary labels
-
-Handling class imbalance (via pos_weight)
-
-🏗️ Model Architecture
-ResNet-18 (pretrained on ImageNet)
-
-Final fully connected layer replaced with 1-output unit
-
-Sigmoid activation for binary classification
-
-Compatible with Grad-CAM for interpretability
-
-Why ResNet-18?
-
-Lightweight
-
-Fast training
-
-Proven strong performance in medical imaging tasks
-
-⚙️ Training Details
-Component	Setting
-Train/Val/Test Split	70/15/15 (stratified)
-Optimizer	Adam
-Learning Rate	1e-4
-Epochs	6
-Batch Size	16
-Loss Function	BCEWithLogitsLoss (+ pos_weight)
-Augmentation	Horizontal/vertical flips, rotations
-
-Model selection is based on lowest validation loss.
-
-📊 Evaluation Results
-
-Final Test Performance:
-
-Accuracy: 0.75
-
-Precision (High-risk): 0.69
-
-Recall (High-risk): 0.88
-
-F1-score: 0.78
-
-ROC-AUC: 0.860
-
-Interpretation:
-High recall means the model rarely misses high-risk lesions — desirable for a triage system.
-
-🔥 Grad-CAM Interpretability
-
-Grad-CAM heatmaps highlight regions of the image the model focuses on when predicting risk.
-These visual explanations help clinicians understand whether the model is focusing on clinically relevant features such as:
-
-Asymmetry
-
-Irregular borders
-
-Color variation
+- Asymmetry  
+- Irregular borders  
+- Color variation  
 
 This improves transparency and trust.
 
-📁 Project Structure
+---
+
+## 📁 Project Structure
 
 DS620-TEAMPROJECT/
+
 │── backend/
-│   ├── backend.py
-│   ├── model.pth
-│   └── requirements.txt
+  ── backend.py
+  ── model.pth
+  ── requirements.txt
+
 │── data/
-│   ├── HAM10000_images/
-│   └── HAM10000_metadata.csv
+  ── HAM10000_images/
+  ── HAM10000_metadata.csv
+  
 │── frontend/
-│   └── index.html
+  ── index.html
+
 │── notebooks/
-│   ├── ai-powered-skin-lesion-triage-assistant.ipynb
-│   └── best_resnet18_triage.pth
+  ── ai-powered-skin-lesion-triage-assistant.ipynb
+  ── best_resnet18_triage.pth
+
 │── README.md
 │── requirements.txt
 
 
-📦 Installation
-1. Clone repository
-git clone <your-repo-url>
-cd project
 
-2. Install dependencies
+---
+
+## 📦 Installation
+
+### 1. Clone the repository
+
+git clone <your-repo-url>
+cd DS620-TEAMPROJECT
+
+### 2. Install dependencies
+pip install -r requirements.txt'
+
+### 3. Download the dataset
+Place the HAM10000 images and metadata inside the data/ directory.
+
+▶️ How to Run Backend and Frontend
+
+This project includes two components:
+Backend → Flask API that performs AI predictions
+Frontend → Simple HTML/JS interface to upload images and display results
+
+Follow the steps below.
+
+🖥️ 1. Start the Backend (Model API)
+
+Step 1 — Navigate to backend folder
+cd DS620-TEAMPROJECT/backend
+
+Step 2 — Install backend dependencies
 pip install -r requirements.txt
 
-3. Download dataset
+Step 3 — Run backend
+python3 backend.py
+You should see:
+Running on http://127.0.0.1:5000
 
-Place the HAM10000 folder under data/.
+Step 4 — Test backend
+Open this URL:
+http://127.0.0.1:5000/ping
+Expected output:
+{"message": "pong"}
 
-▶️ Usage
-Train model
-python src/train.py
+🌐 2. Run the Frontend
+Recommended Method — VS Code Live Server
+Open the frontend folder in VS Code
+Right-click index.html
+Choose Open with Live Server
+This will open:
+http://127.0.0.1:5500/frontend/index.html
+Alternative Method (not recommended)
 
-Evaluate model
-python src/evaluate.py
+Double-click index.html
+⚠️ May cause CORS issues.
 
-Generate Grad-CAM heatmaps
-python src/gradcam.py --image path/to/image.jpg
+🔗 3. Use the Web App
+Once backend and frontend are running:
+Visit the frontend page
+Upload an image
+Click Predict
+View:
+Predicted class
+Confidence score
 
+Probability for each class
+Raw JSON output
+
+---
+⚠️ Troubleshooting
+CORS Error
+Backend must include:
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+Restart backend after editing.
+Predict Button Not Working
+Ensure backend is running:
+http://127.0.0.1:5000/ping
+
+Missing packages
+Install with:
+pip install flask flask-cors torch torchvision pillow
+
+---
 ⚠️ Limitations
+Dataset is skewed toward lighter skin tones
+Only dermoscopic images — smartphone photos unsupported
 
-Dataset heavily skewed toward lighter skin tones
-
-Dermoscopic images only — performance on smartphone photos is not guaranteed
-
-Small subset used for training due to course constraints
-
+Limited data used due to academic constraints
 No clinical validation
+Potential demographic bias
 
+---
 🚀 Future Work
+Explore deeper backbones (ResNet-50, EfficientNet, ViT)
 
-Use deeper models (ResNet-50, EfficientNet, Vision Transformers)
+Improve fairness with diverse datasets
 
-Improve fairness through dataset diversification
+Evaluate demographic performance
 
-Evaluate performance across demographic groups
+Deploy as a mobile/web clinical assistant
 
-Deploy as a mobile/web diagnostic-support tool
+Adapt to smartphone images
 
-Fine-tune on consumer smartphone images
+---
+| Member             | Contribution                         |
+| ------------------ | ------------------------------------ |
+| **Sara Verkiyani** | Team Lead, Writing, Model Evaluation |
+| **Siraphat**       | Model Training, Grad-CAM, Analysis   |
+| **Akzhol**         | Data Cleaning, EDA                   |
+| **Zeinep**         | Literature Review, Fairness Analysis |
 
-👥 Team T08
-
-Sara Verkiyani — Team Lead, Writing, Model Evaluation
-
-Siraphat — Model Training, Grad-CAM, Analysis
-
-Akzhol — Data Cleaning, EDA
-
-Zeinep — Literature Review, Fairness & Limitations
