@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Prediction Demo</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 700px;
+      margin: 2rem auto;
+    }
+    .preview img {
+      max-width: 100%;
+      max-height: 300px;
+      display: block;
+      margin-bottom: 0.5rem;
+      border: 1px solid #ccc;
+    }
+    .bar-container {
+      width: 100%;
+      background: #eee;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.25rem 0 0.75rem 0;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.3s ease;
+    }
+    pre {
+      background: #f8f8f8;
+      padding: 0.75rem;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>AI Photo Prediction</h1>
+
+  <input type="file" id="fileInput" accept="image/*" />
+  <button id="btnPredict">Predict</button>
+
+  <div class="preview" id="preview"></div>
+
+  <h2>Result</h2>
+  <div id="result"></div>
+
+  <h3>Raw response</h3>
+  <pre id="raw"></pre>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const btnPredict = document.getElementById("btnPredict");
+const previewDiv = document.getElementById("preview");
+const resultDiv = document.getElementById("result");
+const rawPre = document.getElementById("raw");
+
+// Modify descriptions to match your actual classes
+const labelDescriptions = {
+  class0: "class0 - negative condition",
+  class1: "class1 - positive condition"
+};
+
+let previewURL = null;
+
+// Show preview image
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  previewDiv.innerHTML = "";
+
+  if (!file) return;
+
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  previewURL = URL.createObjectURL(file);
+
+  const img = document.createElement("img");
+  img.src = previewURL;
+  previewDiv.appendChild(img);
+
+  const p = document.createElement("p");
+  p.textContent = "File: " + file.name;
+  previewDiv.appendChild(p);
+});
+
+// Send image to backend
+btnPredict.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Please select an image first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  resultDiv.textContent = "Predicting...";
+  rawPre.textContent = "";
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/predict", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    rawPre.textContent = JSON.stringify(data, null, 2);
+
+    if (!res.ok) {
+      resultDiv.textContent = "Error: " + (data.error || "Unknown error");
+      return;
+    }
+
+    const label = data.predicted_label;
+    const confidence = data.confidence ?? 0;
+    const prob0 = data.prob_class0 ?? null;
+    const prob1 = data.prob_class1 ?? null;
+
+    const confPercent = (confidence * 100).toFixed(2);
+    const desc = labelDescriptions[label] || label;
+
+    // Build result UI
+    let html = "";
+    html += `<p><strong>Predicted label:</strong> ${label}</p>`;
+    html += `<p><strong>Description:</strong> ${desc}</p>`;
+    html += `<p><strong>Confidence:</strong> ${confPercent}%</p>`;
+
+    html += `
+      <div class="bar-container">
+        <div class="bar-fill" style="width:${confPercent}%;"></div>
+      </div>
+    `;
+
+    if (prob0 !== null && prob1 !== null) {
+      html += `<p>P(class0): ${(prob0 * 100).toFixed(2)}%</p>`;
+      html += `<p>P(class1): ${(prob1 * 100).toFixed(2)}%</p>`;
+    }
+
+    resultDiv.innerHTML = html;
+
+  } catch (err) {
+    console.error(err);
+    resultDiv.textContent = "Request error: " + err.message;
+  }
+});
+</script>
+
+</body>
+</html>
